@@ -4,14 +4,27 @@ CHROOT=${CHROOT=$(pwd)/rootfs}
 RELEASE=${RELEASE=stable}
 HOST_NAME=${HOST_NAME=openstick-debian}
 
+cleanup()
+{
+    # Unmount deepest mounts first. Ignore mounts that do not exist.
+    umount "${CHROOT}/dev/pts" 2>/dev/null || true
+    umount "${CHROOT}/dev"     2>/dev/null || true
+    umount "${CHROOT}/run"     2>/dev/null || true
+    umount "${CHROOT}/sys"     2>/dev/null || true
+    umount "${CHROOT}/proc"    2>/dev/null || true
+}
+
+# Never allow rm -rf to traverse stale bind mounts from a failed build.
+cleanup
+trap cleanup EXIT INT TERM
+
 rm -rf ${CHROOT}
 
-debootstrap --foreign --arch arm64 \
+debootstrap --arch arm64 \
     --keyring /usr/share/keyrings/debian-archive-keyring.gpg ${RELEASE} ${CHROOT}
 
-cp $(which qemu-aarch64-static) ${CHROOT}/usr/bin
 
-chroot ${CHROOT} qemu-aarch64-static /bin/bash /debootstrap/debootstrap --second-stage
+
 
 cat << EOF > ${CHROOT}/etc/apt/sources.list
 deb http://deb.debian.org/debian ${RELEASE} main contrib non-free-firmware
@@ -26,12 +39,14 @@ mount -o bind /dev/pts/ ${CHROOT}/dev/pts/
 mount -o bind /run ${CHROOT}/run/
 
 cp scripts/setup.sh ${CHROOT}
-chroot ${CHROOT} qemu-aarch64-static /bin/sh -c /setup.sh
+chroot ${CHROOT} /bin/sh -c /setup.sh
 
 # cleanup
-for a in proc sys dev/pts dev run; do
-    umount ${CHROOT}/${a}
-done;
+# for a in proc sys dev/pts dev run; do
+#     umount ${CHROOT}/${a}
+# done;
+
+cleanup
 
 rm -f ${CHROOT}/setup.sh
 echo -n > ${CHROOT}/root/.bash_history

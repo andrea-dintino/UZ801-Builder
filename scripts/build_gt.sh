@@ -4,8 +4,8 @@ CHROOT=${CHROOT=$(pwd)/rootfs}
 SRCDIR=$(pwd)/src
 
 # install gt dependencies
-chroot ${CHROOT} qemu-aarch64-static /bin/sh \
-    -c " apt update; apt install libconfig-dev -y"
+chroot ${CHROOT} /bin/sh \
+    -c " apt update; apt install -y libc6-dev libconfig-dev"
 
 # build and install gt
 (
