@@ -70,6 +70,29 @@
   fastboot reboot
   ```
 
+### Building natively on ARM64
+
+This fork has been tested building natively on a Raspberry Pi 4 running 64-bit Debian.
+
+On an ARM64 (`aarch64`) build host, the Debian ARM64 root filesystem is created and configured natively without `qemu-aarch64-static`.
+
+The build scripts also include compatibility fixes for current Debian releases:
+
+* use the current `libconfig11` runtime package;
+* install `libc6-dev` and `libconfig-dev` when building gadget-tools;
+* use a working mirror for the DragonBoard 410c bootloader archive;
+* safely unmount chroot bind mounts when a build exits or fails, preventing a subsequent cleanup from traversing mounted host filesystems.
+
+Build normally with:
+
+```sh
+sudo ./build.sh
+```
+
+This ARM64-native build path has been tested on a Raspberry Pi 4 running Debian 13 (Trixie).
+
+
+
 ## Post-Install
 - Network configuration
   
